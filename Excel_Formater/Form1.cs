@@ -21,16 +21,16 @@ namespace WindowsFormsApplication4
         //List<Balance> Balances = new List<Balance>();
        // List<BalanceFomr2> Balances2 = new List<BalanceFomr2>();
 
-        private async void button1_Click(object sender, EventArgs e)
+        private  void button1_Click(object sender, EventArgs e)
         {
 
-            if (Directory.Exists(@"E:\BALANCE 2015 TEST.xlsx"))
+            if (Directory.Exists(@"d:\BALANCE 2015 TEST.xlsx"))
             {
                 MessageBox.Show(@"Plz Make a file in (E:\) Drive cuz there is no one!!!");
                 return;
 
             }
-            var wb = new XLWorkbook(@"E:\BALANCE 2015 TEST.xlsx");
+            var wb = new XLWorkbook(@"d:\BALANCE 2015 TEST.xlsx");
 
             var ws = wb.Worksheet(1);
            
@@ -150,12 +150,14 @@ namespace WindowsFormsApplication4
 
 
         }
+      //  BalanceFomr2[] bal = new BalanceFomr2[417];
         List<BalanceFomr2> RemoveDuplicatedCompte(List<DuplicatedList> Ls)
         {
             //Duplicated More Than 3 Times
+            List<BalanceFomr2> bal = new List<BalanceFomr2>();
             MessageBox.Show("In the Start of remove duplicate Func" + BalanceFomr2.bal.Count.ToString());
 
-             var bal = BalanceFomr2.bal;
+            BalanceFomr2.bal.ForEach(x => bal.Add(x));
             List<BalanceFomr2> BalanceToRemove = new List<BalanceFomr2>();
             for (int j = 0; j < Ls.Count; j++)
             {
@@ -175,9 +177,10 @@ namespace WindowsFormsApplication4
                     
                 
             }
+           // var bal2 = bal.ToList();
              BalanceToRemove.ForEach(x => bal.Remove(x));
             MessageBox.Show("In the ENd of remove duplicate Func"+BalanceFomr2.bal.Count.ToString());
-            return bal.Where(b => returnListOfDuplicated(bal).Any(x => x.Compte == b.Compte)).OrderBy(w => w.Compte).ToList(); 
+            return bal.Where(b => returnListOfDuplicated(bal.ToList()).Any(x => x.Compte == b.Compte)).OrderBy(w => w.Compte).ToList(); 
         }
         List<DuplicatedList> returnListOfDuplicated(List<BalanceFomr2> bal)
         {
@@ -198,6 +201,9 @@ namespace WindowsFormsApplication4
             dublicatedNew2 =  RemoveDuplicatedCompte(list);
             dataGridView3.DataSource = dublicatedNew2.OrderBy(x => x.Compte).ToList() ;
             label6.Text = dataGridView3.Rows.Count.ToString();
+            label13.Text = (dataGridView3.DataSource as List<BalanceFomr2>).Sum(x => x.Credit2).ToString();
+            label14.Text = (dataGridView3.DataSource as List<BalanceFomr2>).Sum(x => x.Debit2).ToString();
+        
         }
 
         //List<Balance> GetListBalClean()
@@ -293,8 +299,57 @@ namespace WindowsFormsApplication4
         {
             MessageBox.Show(BalanceFomr2.bal.Count+"");
             var l = (dataGridView4.DataSource as List<BalanceFomr2>);
-            dataGridView5.DataSource = BalanceFomr2.bal.Except(l).ToList();
-            label12.Text = dataGridView5.Rows.Count.ToString();
+            for (int j = 0; j < l.Count; j++)
+            {
+                for (int i = 0; i < BalanceFomr2.bal.Count; i++)
+                {
+
+                    if (BalanceFomr2.bal[i].Compte==l[j].Compte)
+                    {
+
+                        //BalanceFomr2.bal[i].Credit1 = l[j].Credit1;
+                        //BalanceFomr2.bal[i].Credit2 = l[j].Credit2;
+                        //BalanceFomr2.bal[i].Debit1 = l[j].Debit1;
+                        //BalanceFomr2.bal[i].Debit2 = l[j].Debit2;
+                        BalanceFomr2.bal.RemoveAt(i);
+                        //bal.Remove(bal.FirstOrDefault(x => x.Compte == bal[i].Compte & x.Credit1 == 0 & x.Credit2 == 0 & x.Debit1 == 0 & x.Debit2 == 0));
+
+                    }
+
+                }
+
+
+            }
+            for (int i = 0; i < BalanceFomr2.bal.Count; i++)
+            {
+
+                BalanceFomr2.bal[i].TotCredit1 = BalanceFomr2.bal[i].Credit1 ;
+                BalanceFomr2.bal[i].TotCredit2 = BalanceFomr2.bal[i].Credit2 ;
+                BalanceFomr2.bal[i].TotDebit1 = BalanceFomr2.bal[i].Debit1 ;
+                BalanceFomr2.bal[i].TotDebit2 = BalanceFomr2.bal[i].Debit2 ;
+
+            
+
+            }
+             //BalanceFomr2.bal.Distinct().Where(x => l.Any(a => x == a)).ToList().Count.ToString();
+            //BalanceFomr2.bal.Distinct().Where(x => !l.Any(a => x==a)).ToList();
+            //BalanceFomr2.bal.Distinct().Where(x => l.Any(a => x == a)).ToList();
+          
+            gridControl1.DataSource = BalanceFomr2.bal;
+
+
+            label12.Text = BalanceFomr2.bal.Concat(l).ToList().Count.ToString();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog fileDialog = new SaveFileDialog();
+            fileDialog.Filter = "Excel |*.xlsx";
+            fileDialog.ShowDialog();
+            if (string.IsNullOrWhiteSpace(fileDialog.FileName))
+                return;
+
+            gridControl1.ExportToXlsx(fileDialog.FileName);
         }
     }
 }
