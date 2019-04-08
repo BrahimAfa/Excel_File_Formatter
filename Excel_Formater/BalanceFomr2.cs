@@ -11,6 +11,8 @@ namespace WindowsFormsApplication4
     {
         public BalanceFomr2(){}
 
+        public static  List<BalanceFomr2> bal = new List<BalanceFomr2>();
+
         [DisplayName("N° Compte")]
         public string Compte { get; set; }
 

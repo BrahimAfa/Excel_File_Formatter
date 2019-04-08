@@ -19,19 +19,25 @@ namespace WindowsFormsApplication4
             InitializeComponent();
         }
         //List<Balance> Balances = new List<Balance>();
-        List<BalanceFomr2> Balances2 = new List<BalanceFomr2>();
+       // List<BalanceFomr2> Balances2 = new List<BalanceFomr2>();
 
         private async void button1_Click(object sender, EventArgs e)
         {
-      
-            
-            var wb = new XLWorkbook(@"D:\BALANCE 2015 TEST.xlsx");
+
+            if (Directory.Exists(@"E:\BALANCE 2015 TEST.xlsx"))
+            {
+                MessageBox.Show(@"Plz Make a file in (E:\) Drive cuz there is no one!!!");
+                return;
+
+            }
+            var wb = new XLWorkbook(@"E:\BALANCE 2015 TEST.xlsx");
 
             var ws = wb.Worksheet(1);
            
           //  var range = ws.RangeUsed();
          // var list = ;
-            dataGridView1.DataSource = await FillBalance2sasync(ws);
+        // BalanceFomr2.bal = await FillBalance2sasync(ws);
+            dataGridView1.DataSource = fillbalance2List(ws.RangeUsed());
 
             label2.Text = dataGridView1.Rows.Count.ToString();
 
@@ -72,7 +78,7 @@ namespace WindowsFormsApplication4
                decimal credit1 = !string.IsNullOrEmpty(item.Cell(4).GetString()) ? decimal.Parse(item.Cell(4).GetString()) : 0;
                decimal debit2 = !string.IsNullOrEmpty(item.Cell(5).GetString()) ? decimal.Parse(item.Cell(5).GetString()) : 0;
                decimal credit2 = !string.IsNullOrEmpty(item.Cell(6).GetString()) ? decimal.Parse(item.Cell(6).GetString()) : 0;
-               Balances2.Add(new BalanceFomr2()
+                BalanceFomr2.bal.Add(new BalanceFomr2()
                {
                    Compte = item.Cell(1).GetString(),
                    Intitule = item.Cell(2).GetString(),
@@ -83,7 +89,7 @@ namespace WindowsFormsApplication4
                });
 
            }
-           return Balances2;
+           return BalanceFomr2.bal;
        }
 
         //  Task<List<Balance>> FillBalancesasync(IXLWorksheet worksheet)
@@ -100,11 +106,13 @@ namespace WindowsFormsApplication4
 
           }
 
-        List<Balance> dublicated = new List<Balance>();
-        List<Balance> dublicatedNew = new List<Balance>();
-        List<DuplicatedList> anonym = new List<DuplicatedList>();
+        //List<Balance> dublicated = new List<Balance>();
+        //List<Balance> dublicatedNew = new List<Balance>();
+        List<BalanceFomr2> dublicatedNew2 = new List<BalanceFomr2>();
+          List<DuplicatedList> list = new List<DuplicatedList>();
         private void button2_Click(object sender, EventArgs e)
         {
+            #region GOld Commente
             //var list = (from b in Balances
             //           where b.Compte == b.Compte
             //           select b) as List<Balance>;
@@ -118,105 +126,100 @@ namespace WindowsFormsApplication4
             //               compte= x.Key
             //           }).ToList();
             //var dublicated = Balances.Where(b => list.Any(x => x.compte.Equals(b.Compte))).ToList();
-            var list = Balances2.
-                     GroupBy(x => x.Compte).
-                     Where(b => b.Count() > 1).
-                     Select(x => new
-                     {
-                         compte = x.Key,
-                         count = x.Count()
-                     }).ToList();
-            foreach (var item in list)
-            {
-                anonym.Add(new DuplicatedList()
-                {
-                    Compte = item.compte,
-                    COUNT = item.count
-                });
-            }
+
             //var query = from b in Balances2
             //            join l in list
             //            on b.Compte equals l.compte
             //            select b;
-            var dublicated = Balances2.Where(b => list.Any(x => x.compte == b.Compte)).OrderBy(w=>w.Compte).ToList();
+            //  Balances.Select(FirstOrDefault(c => c.Compte.Equals(c.Compte));
+            #endregion
+            var l = BalanceFomr2.bal;
+             list = returnListOfDuplicated(l);
 
-            dataGridView2.DataSource = list;
+            //list.ForEach(x => anonym.Add(new DuplicatedList()
+            //{
+            //    Compte = x.compte,
+            //    COUNT = x.count
+            //}));
+
+            //var dublicated = Balances2.Where(b => list.Any(x => x.compte == b.Compte)).OrderBy(w => w.Compte).ToList();
+
+            //dataGridView2.DataSource = RemoveDuplicatedCompte(anonym).OrderBy(x => x.Compte).ToList();
+            dataGridView2.DataSource = list.OrderBy(x=>x.Compte).ToList();
             label4.Text = dataGridView2.Rows.Count.ToString();
 
 
-
-            //  Balances.Select(FirstOrDefault(c => c.Compte.Equals(c.Compte));
         }
+        List<BalanceFomr2> RemoveDuplicatedCompte(List<DuplicatedList> Ls)
+        {
+            //Duplicated More Than 3 Times
+            MessageBox.Show("In the Start of remove duplicate Func" + BalanceFomr2.bal.Count.ToString());
 
+             var bal = BalanceFomr2.bal;
+            List<BalanceFomr2> BalanceToRemove = new List<BalanceFomr2>();
+            for (int j = 0; j < Ls.Count; j++)
+            {
+                for (int i = 0; i < bal.Count; i++)
+            {
+                
+                    if (Ls[j].Compte == bal[i].Compte & Ls[j].COUNT == 3)
+                    {
+
+                        BalanceToRemove.Add(bal.FirstOrDefault(x => x.Compte == bal[i].Compte & x.Credit1 == 0 & x.Credit2 == 0 & x.Debit1 == 0 & x.Debit2 == 0));
+
+                        //bal.Remove(bal.FirstOrDefault(x => x.Compte == bal[i].Compte & x.Credit1 == 0 & x.Credit2 == 0 & x.Debit1 == 0 & x.Debit2 == 0));
+                        break;
+                    }
+
+                }
+                    
+                
+            }
+             BalanceToRemove.ForEach(x => bal.Remove(x));
+            MessageBox.Show("In the ENd of remove duplicate Func"+BalanceFomr2.bal.Count.ToString());
+            return bal.Where(b => returnListOfDuplicated(bal).Any(x => x.Compte == b.Compte)).OrderBy(w => w.Compte).ToList(); 
+        }
+        List<DuplicatedList> returnListOfDuplicated(List<BalanceFomr2> bal)
+        {
+            return bal.
+                  GroupBy(x => x.Compte).
+                  Where(b => b.Count() > 1).
+                  Select(x => new DuplicatedList
+                  {
+                      Compte = x.Key,
+                      COUNT = x.Count()
+                  }).ToList();
+        }
         private void button3_Click(object sender, EventArgs e)
         {
-            dublicatedNew =  GetListBalClean();
-            dataGridView3.DataSource = dublicatedNew;
+            //dublicatedNew =  GetListBalClean();
+            //dataGridView3.DataSource = dublicatedNew;
+            //label6.Text = dataGridView3.Rows.Count.ToString();
+            dublicatedNew2 =  RemoveDuplicatedCompte(list);
+            dataGridView3.DataSource = dublicatedNew2.OrderBy(x => x.Compte).ToList() ;
             label6.Text = dataGridView3.Rows.Count.ToString();
         }
-       
-        List<Balance> GetListBalClean()
-        {
-            List<Balance> Bal = new List<Balance>();
-            for (int i = 0; i < dataGridView2.Rows.Count; i++)
-            {
-                var item = dataGridView2.Rows[i];
-                Bal.Add(new Balance()
-                {
-                    Compte = item.Cells[0].Value.ToString(),
-                    Intitule = item.Cells[1].Value.ToString(),
-                    Debit = decimal.Parse(item.Cells[2].Value.ToString()),
-                    Credit = decimal.Parse(item.Cells[3].Value.ToString())
-                });
-            }
-            for (int i = 0; i < Bal.Count; i++)
-            {
-                Bal[i].TotCredit = Bal[i].Credit + Bal[i + 1].Credit;
 
-
-                Bal[i].TotDebit = Bal[i].Debit + Bal[i + 1].Debit;
-
-
-                //dublicated[i].TotCredit = dublicated[i].Credit + dublicated[i + 1].Credit;
-                //dublicated[i].TotDebit = dublicated[i].Debit + dublicated[i + 1].Debit;
-                Bal.RemoveAt(i + 1);
-            }
-            return Bal;
-        }
-     
-        //List<Balance> GetListBal2Clean()
+        //List<Balance> GetListBalClean()
         //{
-        //    List<BalanceFomr2> Bal = new List<BalanceFomr2>();
+        //    List<Balance> Bal = new List<Balance>();
         //    for (int i = 0; i < dataGridView2.Rows.Count; i++)
         //    {
         //        var item = dataGridView2.Rows[i];
-        //        Bal.Add(new BalanceFomr2()
+        //        Bal.Add(new Balance()
         //        {
         //            Compte = item.Cells[0].Value.ToString(),
         //            Intitule = item.Cells[1].Value.ToString(),
-        //            Debit1 = decimal.Parse(item.Cells[2].Value.ToString()),
-        //            Credit1 = decimal.Parse(item.Cells[3].Value.ToString()),
-        //            Debit2 = decimal.Parse(item.Cells[4].Value.ToString()),
-        //            Credit2 = decimal.Parse(item.Cells[5].Value.ToString()),
-
+        //            Debit = decimal.Parse(item.Cells[2].Value.ToString()),
+        //            Credit = decimal.Parse(item.Cells[3].Value.ToString())
         //        });
         //    }
         //    for (int i = 0; i < Bal.Count; i++)
         //    {
-        //                for (int j = 0; i <anonym.Count ; j++)
-        //        {
-        //            if (Bal[i].Compte == anonym[i].Compte)
-        //            {
-        //                for (int k = 0; k <  anonym[i].COUNT; k++)
-        //                {
+        //        Bal[i].TotCredit = Bal[i].Credit + Bal[i + 1].Credit;
 
-        //                    //Bal[i].TotCredit = Bal[i].Credit + Bal[i + 1].Credit;
 
-        //                    //Bal[i].TotDebit = Bal[i].Debit + Bal[i + 1].Debit;
-        //                }
-        //            }
-        //        }
-             
+        //        Bal[i].TotDebit = Bal[i].Debit + Bal[i + 1].Debit;
 
 
         //        //dublicated[i].TotCredit = dublicated[i].Credit + dublicated[i + 1].Credit;
@@ -225,22 +228,73 @@ namespace WindowsFormsApplication4
         //    }
         //    return Bal;
         //}
+
+        List<BalanceFomr2> GetListBal2Clean()
+        {
+            List<BalanceFomr2> Bal = dublicatedNew2;
+            for (int i = 0; i < Bal.Count; i++)
+            {
+
+                Bal[i].TotCredit1 = Bal[i].Credit1 + Bal[i+1].Credit1;
+                Bal[i].TotCredit2 = Bal[i].Credit2 + Bal[i +1].Credit2;
+                Bal[i].TotDebit1 = Bal[i].Debit1 + Bal[i + 1].Debit1;
+                Bal[i].TotDebit2 = Bal[i].Debit2 + Bal[i + 1].Debit2;
+
+                Bal.RemoveAt(i+1);
+
+            }
+ 
+
+
+
+                //dublicated[i].TotCredit = dublicated[i].Credit + dublicated[i + 1].Credit;
+                //dublicated[i].TotDebit = dublicated[i].Debit + dublicated[i + 1].Debit;
+              
+            
+            return Bal;
+        }
+
         private void button4_Click(object sender, EventArgs e)
         {
+            //if (string.IsNullOrEmpty(textBox1.Text))
+            //{
+            //    dataGridView3.DataSource = dublicatedNew;
+            //    return;
+            //}
+
+            //dataGridView3.DataSource = (dataGridView3.DataSource as List<Balance>).Where(x=> x.Compte.StartsWith(textBox1.Text)).ToList();
+         
             if (string.IsNullOrEmpty(textBox1.Text))
             {
-                dataGridView3.DataSource = dublicatedNew;
+                dataGridView3.DataSource = dublicatedNew2;
                 return;
             }
-            
-            dataGridView3.DataSource = (dataGridView3.DataSource as List<Balance>).Where(x=> x.Compte.StartsWith(textBox1.Text)).ToList();
+
+            dataGridView3.DataSource = (dataGridView3.DataSource as List<BalanceFomr2>).Where(x => x.Compte.StartsWith(textBox1.Text)).ToList();
 
 
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
+            dataGridView4.DataSource = GetListBal2Clean();
+            label8.Text = dataGridView4.Rows.Count.ToString();
+            label9.Text = (dataGridView4.DataSource as List<BalanceFomr2>).Sum(x => x.TotCredit2).ToString();
+            label10.Text = (dataGridView4.DataSource as List<BalanceFomr2>).Sum(x => x.TotDebit2).ToString();
+        }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+           
+                
+        }
+  
+        private void button7_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(BalanceFomr2.bal.Count+"");
+            var l = (dataGridView4.DataSource as List<BalanceFomr2>);
+            dataGridView5.DataSource = BalanceFomr2.bal.Except(l).ToList();
+            label12.Text = dataGridView5.Rows.Count.ToString();
         }
     }
 }
